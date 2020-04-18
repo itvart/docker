@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  centos7-systemd:
+    build: centos7-default/
+    image: hiabe/centos7-systemd
+    container_name: centos7-systemd
+    networks:
+      - site1
+
+  centos7:
+    build: centos7/
+    ports:
+      - 8080:80
+    image: php/centos7-systemd
+    container_name: centos7d
+    privileged: true
+    volumes:
+      - ./ec-cube:/var/www/html/ec-cube
+      - ./httpd/conf.d/v-host.conf:/etc/httpd/conf.d/v-host.conf
+      - ./php/php.ini:/etc/php.d/php.ini
+    depends_on:
+      - centos7-systemd
+    networks:
+      - site1
+
+### MariaDB ##################################
+  mariadb:
+    image: mariadb:10.2
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: eccubedb
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mariadb-database:/var/lib/mysql
+    ports:
+      - 13306:3306
+    restart: always
+    networks:
+      - site1
+
+networks:
+  site1:
+    driver: bridge
+
+volumes:
+  mariadb-database:
+    driver: local
